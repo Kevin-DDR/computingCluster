@@ -1,9 +1,60 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"net"
 )
 
+//TODO Rajouter une file d'attente des jobs
+//TODO Creer une structure contenant un job et un client
+//TODO Rajouter une go routine qui insere le job dans la file d'attente en ecoutant les clients
+//TODO Rajotuer une go routine qui extrait un job de la file
+
+type Noeud struct {
+	conn net.Conn
+	etat int
+}
+
+var noeuds [4]Noeud
+var li net.Listener
+var client net.Conn
+
+func handlerConnexion(id int) {
+	noeuds[id].conn, _ = li.Accept()
+	noeuds[id].etat = 1
+}
+
+func handlerJob() {
+
+	//Reception d'un job du client
+	message, _ := bufio.NewReader(noeuds[0].conn).ReadString('\n')
+
+	fmt.Print("msg : " + message + "\n")
+	//Envoyer le job au noeud
+	for i := 0; i < 4; i++ {
+		//Si le noeud est disponible
+		if noeuds[i].etat == 1 {
+			//On envoi le job au noeud
+			noeuds[i].conn.Write([]byte(message + "\n"))
+			break
+
+		}
+	}
+
+}
+
 func main() {
-	fmt.Printf("hello, my  world\n")
+
+	fmt.Println("Lancement du serveur")
+
+	// listen on all interfaces
+	li, _ = net.Listen("tcp", ":9001")
+	for i := 0; i < 1; i++ {
+		handlerConnexion(i)
+	}
+	handlerJob()
+	for {
+
+	}
 }
