@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"time"
 )
 
@@ -18,15 +19,12 @@ type JobResult struct {
 	ExecDuration time.Duration
 }
 
-func run(a ...string) {
-	/**
-	//app := "ls"
-
-	//args := [...]string{"-al", "-l"}
+func run(jj Job) {
 
 	start := time.Now()
+	var l []string = jj.Args[1:]
 
-	cmd := exec.Command(string(a[0]), string(a[1]))
+	cmd := exec.Command(jj.Args[0], l...)
 	stdout, err := cmd.Output()
 	end := time.Now()
 	elapsed := end.Sub(start)
@@ -38,26 +36,15 @@ func run(a ...string) {
 	fmt.Println(elapsed)
 	fmt.Print(string(stdout))
 	return
-	**/
 
 }
 
 func main() {
 
-	/**args := [...]string{"ls", "-l"}
-
-	run(args)**/
-
 	argsWithoutProg := os.Args[1:]
 
 	var j Job
-	fmt.Println(j.Args)
-	fmt.Println(argsWithoutProg)
+	j.Args = argsWithoutProg
 
-	sum := 0
-	for i := 0; i < len(argsWithoutProg); i++ {
-		j.Args[i] :=argsWithoutProg[i]
-		fmt.Println(sum)
-	}
-
+	run(j)
 }
