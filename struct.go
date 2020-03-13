@@ -15,7 +15,7 @@ type JobResult struct {
 }
 
 type Message struct {
-	idType int
+	idType int //1 connexion Client Master, 2 = Noeuds master
 	id     int
 	j      Job
 	res    JobResult

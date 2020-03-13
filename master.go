@@ -15,24 +15,47 @@ import (
 type Noeud struct {
 	conn net.Conn
 	etat int
+	id   int
 }
 
-var noeuds [4]Noeud
+var noeuds []Noeud
 var li net.Listener
-var client net.Conn
+var clients []Noeuds
 var file []Message
+var compteur int = 0
 
-func handlerConnexion(id int) {
+func handlerConnexion(port string) {
 	//Todo tester si il s'agit d'une connexion serveur ou client
 	//Si c'est un client, lancer un handler pour recevoir un job
 	//Si c'est un noeud lancer un handler pour retirer un job de la file
 
-	noeuds[id].conn, _ = li.Accept()
-	noeuds[id].etat = 1
+	for {
+		tmp, _ := li.Accept()
+		message, _ := bufio.NewReader(tmp).ReadString('\n')
+
+		var msg Message
+		err := json.Unmarshal([]byte(message), &msg)
+
+		switch msg.idType {
+		case 1:
+			clients = append(clients, Noeud{tmp, 1, compteur})
+			go handlerJob(compteur)
+			compteur++
+		case 2:
+			noeuds = append(noeuds, Noeud{tmp, 1, compteur})
+			go handlerNoeud(compteur)
+			compteur++
+		}
+
+	}
+
 }
 
-func handlerJob() {
+func handlerJob(id int) {
+	//TODO tester si c'est une demande de deconnexion
+	for {
 
+	}
 	//Reception d'un job du client
 	message, _ := bufio.NewReader(noeuds[0].conn).ReadString('\n')
 	var msg Message
@@ -49,6 +72,10 @@ func handlerJob() {
 
 		}
 	}
+
+}
+
+func handlerNoeud(id int) {
 
 }
 
