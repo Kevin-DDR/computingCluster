@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"net"
 )
@@ -19,8 +20,13 @@ type Noeud struct {
 var noeuds [4]Noeud
 var li net.Listener
 var client net.Conn
+var file []Message
 
 func handlerConnexion(id int) {
+	//Todo tester si il s'agit d'une connexion serveur ou client
+	//Si c'est un client, lancer un handler pour recevoir un job
+	//Si c'est un noeud lancer un handler pour retirer un job de la file
+
 	noeuds[id].conn, _ = li.Accept()
 	noeuds[id].etat = 1
 }
@@ -29,7 +35,9 @@ func handlerJob() {
 
 	//Reception d'un job du client
 	message, _ := bufio.NewReader(noeuds[0].conn).ReadString('\n')
-
+	var msg Message
+	err := json.Unmarshal([]byte(message), &msg)
+	file = append(file, msg)
 	fmt.Print("msg : " + message + "\n")
 	//Envoyer le job au noeud
 	for i := 0; i < 4; i++ {

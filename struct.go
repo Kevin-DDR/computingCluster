@@ -13,3 +13,10 @@ type JobResult struct {
 	Stderr       []byte
 	ExecDuration time.Duration
 }
+
+type Message struct {
+	idType int
+	id     int
+	j      Job
+	res    JobResult
+}
