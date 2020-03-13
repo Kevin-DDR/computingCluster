@@ -19,28 +19,22 @@ type JobResult struct {
 	ExecDuration time.Duration
 }
 
-func run(jj Job) (res JobResult) {
+func run(jj Job) {
 
 	start := time.Now()
 	var l []string = jj.Args[1:]
 
-	var err error
 	cmd := exec.Command(jj.Args[0], l...)
-	res.Stdout, err = cmd.Output()
+	stdout, err := cmd.Output()
 	end := time.Now()
-
 	elapsed := end.Sub(start)
 
-	res.ExecDuration = elapsed
-
 	if err != nil {
-		ee := string(err.Error())
-		//fmt.Println(err.Error())
-		res.Stderr = []byte(ee)
+		fmt.Println(err.Error())
 		return
 	}
-	//fmt.Println(elapsed)
-	//fmt.Print(string(Stdout))
+	fmt.Println(elapsed)
+	fmt.Print(string(stdout))
 	return
 
 }
@@ -52,6 +46,5 @@ func main() {
 	var j Job
 	j.Args = argsWithoutProg
 
-	tmp := run(j)
-	fmt.Println(string(tmp.Stdout))
+	run(j)
 }
