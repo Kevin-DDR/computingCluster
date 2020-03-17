@@ -15,7 +15,7 @@ type JobResult struct {
 }
 
 type Message struct {
-	idType int //1 connexion Client Master, 2 = Noeuds master
+	idType int //1 connexion Client Master, 2 = Noeuds master, 3 = deconnexion
 	id     int
 	j      Job
 	res    JobResult

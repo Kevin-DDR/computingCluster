@@ -11,6 +11,7 @@ func main() {
 
 	// connect to this socket
 	conn, _ := net.Dial("tcp", "127.0.0.1:9001")
+	msg := Message{1, 0, Job{nil, nil}, &jr}
 	for {
 		// read in input from stdin
 		reader := bufio.NewReader(os.Stdin)
