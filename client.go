@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -11,16 +12,29 @@ func main() {
 
 	// connect to this socket
 	conn, _ := net.Dial("tcp", "127.0.0.1:9001")
-	msg := Message{1, 0, Job{nil, nil}, &jr}
+	var j = Job{}
+	var jr JobResult
+	var msg Message = Message{1, 0, j, jr}
+
 	for {
 		// read in input from stdin
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Text to send: ")
 		text, _ := reader.ReadString('\n')
 		// send to socket
-		fmt.Fprintf(conn, text+"\n")
+		msg.j.Args = append(msg.j.Args, text)
+
+		message, err := json.Marshal(msg)
+		if err != nil {
+			fmt.Println("error:", err)
+		}
+		fmt.Println(message)
+		conn.Write(message)
+		conn.Write([]byte("\n"))
+
+		fmt.Println(text)
 		// listen for reply
-		message, _ := bufio.NewReader(conn).ReadString('\n')
-		fmt.Print("Message from server: " + message)
+		retour, _ := bufio.NewReader(conn).ReadString('\n')
+		fmt.Print("Message from server: " + retour)
 	}
 }

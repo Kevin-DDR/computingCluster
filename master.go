@@ -44,7 +44,8 @@ func handlerConnexion(port string) {
 
 		var msg Message
 		_ = json.Unmarshal([]byte(message), &msg)
-
+		var idType int = msg.idType
+		fmt.Printf("Message recu ! IDType : %d", idType)
 		switch msg.idType {
 		case 1:
 			clients = append(clients, Noeud{tmp, 1, compteur})
