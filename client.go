@@ -12,27 +12,46 @@ func main() {
 
 	// connect to this socket
 	conn, _ := net.Dial("tcp", "127.0.0.1:9001")
-	var j = Job{}
-	var jr JobResult
-	var msg Message = Message{1, 0, j, jr}
+	msg := Message{IdType: 1, Id: 0, J: Job{
+		Args:     nil,
+		callback: nil,
+	}, Res: JobResult{
+		ExecErr:      nil,
+		Stdout:       nil,
+		Stderr:       nil,
+		ExecDuration: 0,
+	},
+	}
+
+	//Envoi de la demande de connexion
+	fmt.Println("Envoi de la demande de conenxion")
+
+	messageJSON, err := json.Marshal(msg)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	conn.Write(messageJSON)
+	conn.Write([]byte("\n"))
+
+	reader := bufio.NewReader(os.Stdin)
 
 	for {
 		// read in input from stdin
-		reader := bufio.NewReader(os.Stdin)
+
 		fmt.Print("Text to send: ")
 		text, _ := reader.ReadString('\n')
+		text = text[:len(text)-1]
 		// send to socket
-		msg.j.Args = append(msg.j.Args, text)
+		msg.J.Args = append(msg.J.Args, text)
+		msg.IdType = 4
 
-		message, err := json.Marshal(msg)
+		messageJSON, err := json.Marshal(msg)
 		if err != nil {
 			fmt.Println("error:", err)
 		}
-		fmt.Println(message)
-		conn.Write(message)
+		conn.Write(messageJSON)
 		conn.Write([]byte("\n"))
 
-		fmt.Println(text)
 		// listen for reply
 		retour, _ := bufio.NewReader(conn).ReadString('\n')
 		fmt.Print("Message from server: " + retour)

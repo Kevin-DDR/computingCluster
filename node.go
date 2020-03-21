@@ -1,57 +1,72 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
-	"os"
+	"net"
 	"os/exec"
 	"time"
 )
 
-type Job struct {
-	Args     []string
-	callback func(JobResult)
-}
-
-type JobResult struct {
-	ExecErr      error
-	Stdout       []byte
-	Stderr       []byte
-	ExecDuration time.Duration
-}
-
-func run(jj Job) (res JobResult) {
-
-	start := time.Now()
-	var l []string = jj.Args[1:]
-
-	var err error
-	cmd := exec.Command(jj.Args[0], l...)
-	res.Stdout, err = cmd.Output()
-	end := time.Now()
-
-	elapsed := end.Sub(start)
-
-	res.ExecDuration = elapsed
-
-	if err != nil {
-		ee := string(err.Error())
-		//fmt.Println(err.Error())
-		res.Stderr = []byte(ee)
-		return
-	}
-	//fmt.Println(elapsed)
-	//fmt.Print(string(Stdout))
-	return
-
-}
-
 func main() {
 
-	argsWithoutProg := os.Args[1:]
+	// connect to this socket
+	conn, _ := net.Dial("tcp", "127.0.0.1:9001")
+	msg := Message{IdType: 2, Id: 0, J: Job{
+		Args:     nil,
+		callback: nil,
+	}, Res: JobResult{
+		ExecErr:      nil,
+		Stdout:       nil,
+		Stderr:       nil,
+		ExecDuration: 0,
+	},
+	}
 
-	var j Job
-	j.Args = argsWithoutProg
+	//Envoi de la demande de connexion
+	fmt.Println("Envoi de la demande de conenxion")
 
-	tmp := run(j)
-	fmt.Println(string(tmp.Stdout))
+	messageJSON, err := json.Marshal(msg)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	conn.Write(messageJSON)
+	conn.Write([]byte("\n"))
+
+	for {
+
+		// listen for reply
+		retour, _ := bufio.NewReader(conn).ReadString('\n')
+		fmt.Print("Message from server: " + retour)
+		var msg Message
+		_ = json.Unmarshal([]byte(retour), &msg)
+
+		start := time.Now()
+
+		cmd := exec.Command(msg.J.Args[0], msg.J.Args...)
+		msg.Res.Stdout, err = cmd.Output()
+		end := time.Now()
+
+		elapsed := end.Sub(start)
+
+		msg.Res.ExecDuration = elapsed
+
+		if err != nil {
+			ee := string(err.Error())
+			//fmt.Println(err.Error())
+			msg.Res.Stderr = []byte(ee)
+		}
+
+		fmt.Println("Envoi de la réponse")
+		msg.IdType = 5
+		messageJSON, err := json.Marshal(msg)
+		if err != nil {
+			fmt.Println("error:", err)
+		}
+		conn.Write(messageJSON)
+		conn.Write([]byte("\n"))
+
+	}
+
 }

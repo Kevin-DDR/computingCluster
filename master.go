@@ -15,7 +15,7 @@ import (
 type Noeud struct {
 	conn net.Conn
 	etat int
-	id   int
+	Id   int
 }
 
 func remove(slice []Noeud, s int) []Noeud {
@@ -41,12 +41,11 @@ func handlerConnexion(port string) {
 	for {
 		tmp, _ := li.Accept()
 		message, _ := bufio.NewReader(tmp).ReadString('\n')
-
+		fmt.Println("Connexion recue : ", message)
 		var msg Message
 		_ = json.Unmarshal([]byte(message), &msg)
-		var idType int = msg.idType
-		fmt.Printf("Message recu ! IDType : %d", idType)
-		switch msg.idType {
+		fmt.Println("Message recu ! IdType : ", msg.IdType)
+		switch msg.IdType {
 		case 1:
 			clients = append(clients, Noeud{tmp, 1, compteur})
 			go handlerJob(compteur)
@@ -61,26 +60,26 @@ func handlerConnexion(port string) {
 
 }
 
-func handlerJob(id int) {
+func handlerJob(Id int) {
 	//TODO tester si c'est une demande de deconnexion
 	for {
-		message, _ := bufio.NewReader(noeuds[id].conn).ReadString('\n')
+		message, _ := bufio.NewReader(clients[Id].conn).ReadString('\n')
 		var msg Message
 		_ = json.Unmarshal([]byte(message), &msg)
-		switch msg.idType {
+		switch msg.IdType {
 		case 3:
 			var tmp int
 			//Demande de deconnexion
-			noeuds[id].conn.Close()
-			for i := 0; i < len(noeuds); i++ {
-				if noeuds[i].id == id {
+			clients[Id].conn.Close()
+			for i := 0; i < len(clients); i++ {
+				if clients[i].Id == Id {
 					tmp = i
 					break
 				}
 			}
-			noeuds = remove(noeuds, tmp)
+			clients = remove(clients, tmp)
 		default:
-			msg.id = id
+			msg.Id = Id
 			file = append(file, msg)
 			fmt.Print("msg : " + message + "\n")
 		}
@@ -91,7 +90,7 @@ func handlerJob(id int) {
 
 }
 
-func handlerNoeud(id int) {
+func handlerNoeud(Id int) {
 
 	for {
 		if len(file) > 0 && len(noeuds) > 0 {
@@ -99,11 +98,16 @@ func handlerNoeud(id int) {
 				//Si le noeud est disponible
 				if noeuds[i].etat == 1 {
 					//On envoi le job au noeud
+					fmt.Println("Len(file) : ", len(file))
 					message, _ := json.Marshal(file[0])
 					file = removeMsg(file, 0)
 					noeuds[i].conn.Write(message)
 					noeuds[i].conn.Write([]byte("\n"))
-
+					retour, _ := bufio.NewReader(noeuds[i].conn).ReadString('\n')
+					var msg Message
+					_ = json.Unmarshal([]byte(message), &msg)
+					clients[msg.Id].conn.Write([]byte(retour))
+					clients[msg.Id].conn.Write([]byte("\n"))
 					//TODO Attendre une reponse et lar envoyer
 					break
 

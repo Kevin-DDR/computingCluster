@@ -1,22 +1,24 @@
 package main
 
-import "time"
+import (
+	"time"
+)
 
 type Job struct {
-	Args     []string
-	callback func(JobResult)
+	Args     []string        `json: "Args"`
+	callback func(JobResult) `json: "callback"`
 }
 
 type JobResult struct {
-	ExecErr      error
-	Stdout       []byte
-	Stderr       []byte
-	ExecDuration time.Duration
+	ExecErr      error         `json: "ExecErr"`
+	Stdout       []byte        `json: "Stdout"`
+	Stderr       []byte        `json: "Stderr"`
+	ExecDuration time.Duration `json: "ExecDuration"`
 }
 
 type Message struct {
-	idType int //1 connexion Client Master, 2 = Noeuds master, 3 = deconnexion
-	id     int
-	j      Job
-	res    JobResult
+	IdType int       `json: "idType"` //1 connexion Client Master, 2 = Noeuds master, 3 = deconnexion 4 = envoi d'un job
+	Id     int       `json: "id"`
+	J      Job       `json: "j"`
+	Res    JobResult `json: "res"`
 }
