@@ -37,6 +37,8 @@ func main() {
 
 	for {
 		msg.J.Args = nil
+		msg.Res.Stdout = nil
+		msg.Res.Stderr = nil
 		// read in input from stdin
 
 		fmt.Print("Text to send: ")
@@ -55,6 +57,16 @@ func main() {
 
 		// listen for reply
 		retour, _ := bufio.NewReader(conn).ReadString('\n')
-		fmt.Print("Message from server: " + retour)
+		_ = json.Unmarshal([]byte(retour), &msg)
+
+		if msg.Res.Stderr != nil {
+			fmt.Println("erreur de commande ---> " + string(msg.Res.Stderr))
+
+		} else {
+			fmt.Print("Message from server: " + string(msg.Res.Stdout))
+			//fmt.Print("Time Execution: " + msg.Res.ExecDuration)
+
+		}
+
 	}
 }

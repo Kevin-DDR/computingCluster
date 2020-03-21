@@ -43,24 +43,16 @@ func main() {
 		var msg Message
 		_ = json.Unmarshal([]byte(retour), &msg)
 
-		fmt.Println("hhhhhhhhh", msg.J.Args)
-		fmt.Println("hhhhhhhhh", len(msg.J.Args))
-
 		words := strings.Fields(msg.J.Args[0])
 
-		fmt.Println(words, len(words))
-
 		words2 := words[1:]
-
-		fmt.Println(words2)
 
 		start := time.Now()
 
 		cmd := exec.Command(words[0], words2...)
 
 		msg.Res.Stdout, err = cmd.Output()
-		fmt.Println(msg.Res.Stdout)
-		fmt.Println(string(msg.Res.Stdout))
+
 		end := time.Now()
 
 		elapsed := end.Sub(start)
