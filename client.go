@@ -36,6 +36,7 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
+		msg.J.Args = nil
 		// read in input from stdin
 
 		fmt.Print("Text to send: ")
