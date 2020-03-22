@@ -5,10 +5,47 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
 )
+
+func handlerDeco(conn net.Conn) {
+
+	msg := Message{IdType: 2, Id: 0, J: Job{
+		Args:     nil,
+		callback: nil,
+	}, Res: JobResult{
+		ExecErr:      nil,
+		Stdout:       nil,
+		Stderr:       nil,
+		ExecDuration: 0,
+	},
+	}
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Println("Tapez exit pour quitter")
+		text, _ := reader.ReadString('\n')
+		text = text[:len(text)-1]
+
+		if text == "exit" {
+			msg.IdType = 3
+
+			messageJSON, err := json.Marshal(msg)
+			if err != nil {
+				fmt.Println("error:", err)
+			}
+			conn.Write(messageJSON)
+			conn.Write([]byte("\n"))
+			fmt.Println("Demande de deconenxion envoyée")
+
+			os.Exit(1)
+		}
+
+	}
+}
 
 func main() {
 
@@ -34,6 +71,8 @@ func main() {
 	}
 	conn.Write(messageJSON)
 	conn.Write([]byte("\n"))
+
+	//go handlerDeco(conn)
 
 	for {
 

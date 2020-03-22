@@ -32,6 +32,8 @@ var clients []Noeud
 var file []Message
 var compteur int = 0
 
+var sem semaphore = make(semaphore, 1)
+
 func handlerConnexion(port string) {
 	//Todo tester si il s'agit d'une connexion serveur ou client
 	//Si c'est un client, lancer un handler pour recevoir un job
@@ -62,22 +64,22 @@ func handlerConnexion(port string) {
 
 func handlerJob(Id int) {
 	//TODO tester si c'est une demande de deconnexion
+	var index int
+	for i := 0; i < len(clients); i++ {
+		if clients[i].Id == Id {
+			index = i
+			break
+		}
+	}
 	for {
-		message, _ := bufio.NewReader(clients[Id].conn).ReadString('\n')
+		message, _ := bufio.NewReader(clients[index].conn).ReadString('\n')
 		var msg Message
 		_ = json.Unmarshal([]byte(message), &msg)
 		switch msg.IdType {
 		case 3:
-			var tmp int
-			//Demande de deconnexion
-			clients[Id].conn.Close()
-			for i := 0; i < len(clients); i++ {
-				if clients[i].Id == Id {
-					tmp = i
-					break
-				}
-			}
-			clients = remove(clients, tmp)
+
+			clients = remove(clients, index)
+			return
 		default:
 			msg.Id = Id
 			file = append(file, msg)
@@ -96,22 +98,43 @@ func handlerNoeud(Id int) {
 		if len(file) > 0 && len(noeuds) > 0 {
 			for i := 0; i < len(noeuds); i++ {
 				//Si le noeud est disponible
-				if noeuds[i].etat == 1 {
+				Lock(sem)
+				if len(file) > 0 && noeuds[i].etat == 1 {
 					//On envoi le job au noeud
-					fmt.Println("Len(file) : ", len(file))
 					message, _ := json.Marshal(file[0])
+
 					file = removeMsg(file, 0)
+
 					noeuds[i].conn.Write(message)
 					noeuds[i].conn.Write([]byte("\n"))
 					retour, _ := bufio.NewReader(noeuds[i].conn).ReadString('\n')
 					var msg Message
 					_ = json.Unmarshal([]byte(message), &msg)
-					clients[msg.Id].conn.Write([]byte(retour))
-					clients[msg.Id].conn.Write([]byte("\n"))
+
+					var index int
+					for i := 0; i < len(clients); i++ {
+						if clients[i].Id == msg.Id {
+							index = i
+							break
+						}
+					}
+					switch msg.IdType {
+					case 3:
+						//Deconnexion
+						noeuds = remove(noeuds, i)
+						return
+					default:
+						clients[index].conn.Write([]byte(retour))
+						clients[index].conn.Write([]byte("\n"))
+					}
+					Unlock(sem)
+
 					//TODO Attendre une reponse et lar envoyer
 					break
 
 				}
+				Unlock(sem)
+
 			}
 		}
 
